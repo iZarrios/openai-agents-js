@@ -1,21 +1,48 @@
-# AI SDK Example
+# AI SDK Examples
 
-This example shows how to run the Agents SDK with a model provided by the [AI SDK](https://www.npmjs.com/package/@ai-sdk/openai).
+This directory contains examples showing how to run the Agents SDK with models provided by the [Vercel AI SDK](https://sdk.vercel.ai).
 
-The [ai-sdk-model.ts](./ai-sdk-model.ts) script:
+## Basic Example ([index.ts](./index.ts))
 
-- Wraps the AI SDK `openai` provider with `aisdk` from `@openai/agents-extensions`.
-- Creates a simple `get_weather` tool that returns a mock weather string.
-- Defines a data agent that uses this model and tool.
-- Runs a parent agent that hands off to the data agent to answer a weather question.
+Shows basic usage with OpenRouter and other providers:
 
-## Running the script
+- Wraps AI SDK providers with `aisdk` from `@openai/agents-extensions`
+- Creates a weather tool and demonstrates agent handoffs
+- Supports multiple providers (OpenAI, Anthropic, Google, etc.)
 
-From the repository root, execute:
+**Run:**
 
 ```bash
-pnpm -F ai-sdk start:sdk-model
+pnpm -F ai-sdk start
 ```
 
-The script prints the final output produced by the runner.
+## Gemini Reasoning Example ([gemini-reasoning.ts](./gemini-reasoning.ts))
 
+Demonstrates Gemini 2.5 Pro with advanced reasoning capabilities:
+
+- Uses Gemini 2.5 Pro with `reasoningEffort: 'high'`
+- Shows how reasoning content is properly captured and displayed
+- Includes usage tracking for reasoning tokens
+- Perfect example of the reasoning support added to the AI SDK extension
+
+**Setup:**
+
+```bash
+export GOOGLE_GENERATIVE_AI_API_KEY=your_api_key_here
+```
+
+**Run:**
+
+```bash
+pnpm -F ai-sdk start:reasoning
+```
+
+## Streaming Example ([stream.ts](./stream.ts))
+
+Shows how to use streaming responses with AI SDK models.
+
+**Run:**
+
+```bash
+pnpm -F ai-sdk start:stream
+```

@@ -495,6 +495,22 @@ export class AiSdkModel implements Model {
           });
         }
 
+        // Handle reasoning/thinking content from the model response
+        // Check for both 'reasoning' (AI SDK standard) and thinking content
+        const reasoningItem = resultContent.find(
+          (c: any) =>
+            c &&
+            (c.type === 'reasoning' || c.type === 'thinking') &&
+            typeof c.text === 'string',
+        );
+        if (reasoningItem) {
+          output.push({
+            type: 'reasoning',
+            content: [],
+            rawContent: [{ type: 'reasoning_text', text: reasoningItem.text }],
+          });
+        }
+
         // Some of other platforms may return both tool calls and text.
         // Putting a text message here will let the agent loop to complete,
         // so adding this item only when the tool calls are empty.
@@ -669,6 +685,7 @@ export class AiSdkModel implements Model {
       let usageCompletionTokens = 0;
       const functionCalls: Record<string, protocol.FunctionCallItem> = {};
       let textOutput: protocol.OutputText | undefined;
+      let reasoningText = '';
 
       for await (const part of stream) {
         if (!started) {
@@ -700,6 +717,10 @@ export class AiSdkModel implements Model {
             }
             break;
           }
+          case 'reasoning-delta': {
+            reasoningText += (part as any).delta || '';
+            break;
+          }
           case 'response-metadata': {
             if ((part as any).id) {
               responseId = (part as any).id;
@@ -726,6 +747,13 @@ export class AiSdkModel implements Model {
       }
 
       const outputs: protocol.OutputModelItem[] = [];
+      if (reasoningText) {
+        outputs.push({
+          type: 'reasoning',
+          content: [],
+          rawContent: [{ type: 'reasoning_text', text: reasoningText }],
+        });
+      }
       if (textOutput) {
         outputs.push({
           type: 'message',

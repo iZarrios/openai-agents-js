@@ -984,6 +984,59 @@ describe('AiSdkModel', () => {
     ]);
   });
 
+  test('handles reasoning content in model response', async () => {
+    const fakeModel = {
+      specificationVersion: 'v2',
+      provider: 'fake',
+      modelId: 'm',
+      supportedUrls: [],
+      doGenerate: vi.fn(async () => ({
+        content: [
+          { type: 'reasoning', text: 'I need to think about this' },
+          { type: 'text', text: 'The answer is 42' },
+        ],
+        usage: { inputTokens: 10, outputTokens: 20, totalTokens: 30 },
+        providerMetadata: {},
+        finishReason: 'stop',
+        warnings: [],
+      })),
+    };
+
+    const model = new AiSdkModel(fakeModel as any);
+    const response = await withTrace('t', () =>
+      model.getResponse({
+        input: [
+          {
+            role: 'user',
+            content: [{ type: 'input_text', text: 'What is the answer?' }],
+          },
+        ],
+        tools: [],
+        handoffs: [],
+        modelSettings: {},
+        outputType: 'text',
+        tracing: false,
+      } as any),
+    );
+
+    expect(response.output).toEqual([
+      {
+        type: 'reasoning',
+        content: [],
+        rawContent: [
+          { type: 'reasoning_text', text: 'I need to think about this' },
+        ],
+      },
+      {
+        type: 'message',
+        role: 'assistant',
+        content: [{ type: 'output_text', text: 'The answer is 42' }],
+        status: 'completed',
+        providerData: {},
+      },
+    ]);
+  });
+
   describe('parseArguments', () => {
     test('should parse valid JSON', () => {
       expect(parseArguments(undefined)).toEqual({});
