@@ -716,7 +716,7 @@ export class AiSdkModel implements Model {
       let textOutput: protocol.OutputText | undefined;
       let reasoningText = '';
       let providerMetadata: any = {};
-      providerMetadata["__CUSTOM__"] = "__CUSTOM__";
+      providerMetadata['__CUSTOM__'] = '__CUSTOM__';
       console.error(
         '🎬 AI SDK Extension: Initialized reasoning text accumulator',
       );
@@ -766,6 +766,7 @@ export class AiSdkModel implements Model {
               '🔄 AI SDK Extension: Accumulated reasoning text length:',
               reasoningText.length,
             );
+            yield { type: 'model', event: part };
             break;
           }
           case 'response-metadata': {
