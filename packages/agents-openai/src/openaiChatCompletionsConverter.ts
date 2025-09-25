@@ -187,7 +187,7 @@ export function itemsToMessages(
       const asst = ensureAssistantMessage();
       // @ts-expect-error - reasoning is not supported in the official Chat Completion API spec
       // this is handling third party providers that support reasoning
-      asst.reasoning = item.rawContent?.[0]?.text;
+      asst.reasoning = item.rawContent?.[0]?.text || 'NO REASONING SENT';
       continue;
     } else if (item.type === 'hosted_tool_call') {
       if (item.name === 'file_search_call') {

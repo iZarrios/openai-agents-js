@@ -715,6 +715,7 @@ export class AiSdkModel implements Model {
       const functionCalls: Record<string, protocol.FunctionCallItem> = {};
       let textOutput: protocol.OutputText | undefined;
       let reasoningText = '';
+      let providerMetadata: any = undefined;
       console.error(
         '🎬 AI SDK Extension: Initialized reasoning text accumulator',
       );
@@ -773,6 +774,10 @@ export class AiSdkModel implements Model {
             break;
           }
           case 'finish': {
+            console.error(
+              '🏁 AI SDK Extension: Received finish event with part:',
+              JSON.stringify(part, null, 2),
+            );
             usagePromptTokens = Number.isNaN((part as any).usage?.inputTokens)
               ? 0
               : ((part as any).usage?.inputTokens ?? 0);
@@ -781,6 +786,43 @@ export class AiSdkModel implements Model {
             )
               ? 0
               : ((part as any).usage?.outputTokens ?? 0);
+
+            // Capture provider metadata
+            providerMetadata = (part as any).providerMetadata;
+
+            // Check for reasoning/thinking content in finish event (for providers like Google)
+            const finishReasoning =
+              (part as any).reasoning ||
+              (part as any).thinking ||
+              (part as any).thoughtSignature;
+            if (
+              finishReasoning &&
+              typeof finishReasoning === 'string' &&
+              !reasoningText
+            ) {
+              console.error(
+                '🎯 AI SDK Extension: Found reasoning/thinking/thoughtSignature in finish event:',
+                finishReasoning.substring(0, 200) +
+                  (finishReasoning.length > 200 ? '...' : ''),
+              );
+              reasoningText = finishReasoning;
+            }
+
+            // Check for reasoning in provider metadata (Google might put it here)
+            if (!reasoningText && providerMetadata) {
+              const metaReasoning =
+                providerMetadata.reasoning ||
+                providerMetadata.thinking ||
+                providerMetadata.thoughtSignature;
+              if (metaReasoning && typeof metaReasoning === 'string') {
+                console.error(
+                  '🎯 AI SDK Extension: Found reasoning/thinking/thoughtSignature in provider metadata:',
+                  metaReasoning.substring(0, 200) +
+                    (metaReasoning.length > 200 ? '...' : ''),
+                );
+                reasoningText = metaReasoning;
+              }
+            }
             break;
           }
           case 'error': {
@@ -835,6 +877,7 @@ export class AiSdkModel implements Model {
             totalTokens: usagePromptTokens + usageCompletionTokens,
           },
           output: outputs,
+          providerData: providerMetadata,
         },
       };
 
