@@ -1,3 +1,5 @@
+console.error('📦 AI SDK Extension: Module loaded');
+
 import type {
   JSONSchema7,
   LanguageModelV2,
@@ -398,11 +400,19 @@ export class AiSdkModel implements Model {
   #model: LanguageModelV2;
   #logger = getLogger('openai-agents:extensions:ai-sdk');
   constructor(model: LanguageModelV2) {
+    console.error('🔧 AI SDK Extension: AiSdkModel constructor called');
+    console.error(
+      '🔧 AI SDK Extension: Logger dontLogModelData:',
+      this.#logger.dontLogModelData,
+    );
     this.#model = model;
   }
 
   async getResponse(request: ModelRequest) {
-    console.log('🚀 AI SDK Extension: Starting getResponse processing');
+    console.error(
+      '🚀🚀🚀 AI SDK EXTENSION: getResponse called with input:',
+      request.input,
+    );
     return withGenerationSpan(async (span) => {
       try {
         span.spanData.model = this.#model.provider + ':' + this.#model.modelId;
@@ -478,7 +488,7 @@ export class AiSdkModel implements Model {
         const output: ModelResponse['output'] = [];
 
         const resultContent = (result as any).content ?? [];
-        console.log(
+        console.error(
           '📋 AI SDK Extension: Result content types found:',
           resultContent.map((c: any) => c?.type),
         );
@@ -502,7 +512,7 @@ export class AiSdkModel implements Model {
 
         // Handle reasoning/thinking content from the model response
         // Check for both 'reasoning' (AI SDK standard) and thinking content
-        console.log(
+        console.error(
           '🤔 AI SDK Extension: Checking for reasoning/thinking content in resultContent:',
           resultContent,
         );
@@ -513,7 +523,7 @@ export class AiSdkModel implements Model {
             typeof c.text === 'string',
         );
         if (reasoningItem) {
-          console.log(
+          console.error(
             '✅ AI SDK Extension: Found reasoning/thinking content:',
             reasoningItem,
           );
@@ -522,9 +532,9 @@ export class AiSdkModel implements Model {
             content: [],
             rawContent: [{ type: 'reasoning_text', text: reasoningItem.text }],
           });
-          console.log('📝 AI SDK Extension: Added reasoning item to output');
+          console.error('📝 AI SDK Extension: Added reasoning item to output');
         } else {
-          console.log(
+          console.error(
             '❌ AI SDK Extension: No reasoning/thinking content found',
           );
         }
@@ -623,7 +633,7 @@ export class AiSdkModel implements Model {
   async *getStreamedResponse(
     request: ModelRequest,
   ): AsyncIterable<ResponseStreamEvent> {
-    console.log('🚀 AI SDK Extension: Starting streamed response processing');
+    console.error('🚀 AI SDK Extension: Starting streamed response processing');
     const span = request.tracing ? createGenerationSpan() : undefined;
     try {
       if (span) {
@@ -705,7 +715,7 @@ export class AiSdkModel implements Model {
       const functionCalls: Record<string, protocol.FunctionCallItem> = {};
       let textOutput: protocol.OutputText | undefined;
       let reasoningText = '';
-      console.log(
+      console.error(
         '🎬 AI SDK Extension: Initialized reasoning text accumulator',
       );
 
@@ -717,7 +727,7 @@ export class AiSdkModel implements Model {
 
         yield { type: 'model', event: part };
 
-        console.log(
+        console.error(
           '📨 AI SDK Extension: Received stream event type:',
           part.type,
         );
@@ -745,12 +755,12 @@ export class AiSdkModel implements Model {
           }
           case 'reasoning-delta': {
             const delta = (part as any).delta || '';
-            console.log(
+            console.error(
               '📦 AI SDK Extension: Received reasoning-delta:',
               delta,
             );
             reasoningText += delta;
-            console.log(
+            console.error(
               '🔄 AI SDK Extension: Accumulated reasoning text length:',
               reasoningText.length,
             );
@@ -783,11 +793,11 @@ export class AiSdkModel implements Model {
 
       const outputs: protocol.OutputModelItem[] = [];
       if (reasoningText) {
-        console.log(
+        console.error(
           '🎯 AI SDK Extension: Creating final reasoning output with text length:',
           reasoningText.length,
         );
-        console.log(
+        console.error(
           '📄 AI SDK Extension: Final reasoning text preview:',
           reasoningText.substring(0, 200) +
             (reasoningText.length > 200 ? '...' : ''),
@@ -797,11 +807,11 @@ export class AiSdkModel implements Model {
           content: [],
           rawContent: [{ type: 'reasoning_text', text: reasoningText }],
         });
-        console.log(
+        console.error(
           '✅ AI SDK Extension: Added reasoning output to final results',
         );
       } else {
-        console.log('❌ AI SDK Extension: No reasoning text accumulated');
+        console.error('❌ AI SDK Extension: No reasoning text accumulated');
       }
       if (textOutput) {
         outputs.push({
