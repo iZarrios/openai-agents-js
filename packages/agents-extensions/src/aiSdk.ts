@@ -402,6 +402,7 @@ export class AiSdkModel implements Model {
   }
 
   async getResponse(request: ModelRequest) {
+    console.log('🚀 AI SDK Extension: Starting getResponse processing');
     return withGenerationSpan(async (span) => {
       try {
         span.spanData.model = this.#model.provider + ':' + this.#model.modelId;
@@ -477,6 +478,10 @@ export class AiSdkModel implements Model {
         const output: ModelResponse['output'] = [];
 
         const resultContent = (result as any).content ?? [];
+        console.log(
+          '📋 AI SDK Extension: Result content types found:',
+          resultContent.map((c: any) => c?.type),
+        );
         const toolCalls = resultContent.filter(
           (c: any) => c && c.type === 'tool-call',
         );
@@ -497,6 +502,10 @@ export class AiSdkModel implements Model {
 
         // Handle reasoning/thinking content from the model response
         // Check for both 'reasoning' (AI SDK standard) and thinking content
+        console.log(
+          '🤔 AI SDK Extension: Checking for reasoning/thinking content in resultContent:',
+          resultContent,
+        );
         const reasoningItem = resultContent.find(
           (c: any) =>
             c &&
@@ -504,11 +513,20 @@ export class AiSdkModel implements Model {
             typeof c.text === 'string',
         );
         if (reasoningItem) {
+          console.log(
+            '✅ AI SDK Extension: Found reasoning/thinking content:',
+            reasoningItem,
+          );
           output.push({
             type: 'reasoning',
             content: [],
             rawContent: [{ type: 'reasoning_text', text: reasoningItem.text }],
           });
+          console.log('📝 AI SDK Extension: Added reasoning item to output');
+        } else {
+          console.log(
+            '❌ AI SDK Extension: No reasoning/thinking content found',
+          );
         }
 
         // Some of other platforms may return both tool calls and text.
@@ -605,6 +623,7 @@ export class AiSdkModel implements Model {
   async *getStreamedResponse(
     request: ModelRequest,
   ): AsyncIterable<ResponseStreamEvent> {
+    console.log('🚀 AI SDK Extension: Starting streamed response processing');
     const span = request.tracing ? createGenerationSpan() : undefined;
     try {
       if (span) {
@@ -686,6 +705,9 @@ export class AiSdkModel implements Model {
       const functionCalls: Record<string, protocol.FunctionCallItem> = {};
       let textOutput: protocol.OutputText | undefined;
       let reasoningText = '';
+      console.log(
+        '🎬 AI SDK Extension: Initialized reasoning text accumulator',
+      );
 
       for await (const part of stream) {
         if (!started) {
@@ -695,6 +717,10 @@ export class AiSdkModel implements Model {
 
         yield { type: 'model', event: part };
 
+        console.log(
+          '📨 AI SDK Extension: Received stream event type:',
+          part.type,
+        );
         switch (part.type) {
           case 'text-delta': {
             if (!textOutput) {
@@ -718,7 +744,16 @@ export class AiSdkModel implements Model {
             break;
           }
           case 'reasoning-delta': {
-            reasoningText += (part as any).delta || '';
+            const delta = (part as any).delta || '';
+            console.log(
+              '📦 AI SDK Extension: Received reasoning-delta:',
+              delta,
+            );
+            reasoningText += delta;
+            console.log(
+              '🔄 AI SDK Extension: Accumulated reasoning text length:',
+              reasoningText.length,
+            );
             break;
           }
           case 'response-metadata': {
@@ -748,11 +783,25 @@ export class AiSdkModel implements Model {
 
       const outputs: protocol.OutputModelItem[] = [];
       if (reasoningText) {
+        console.log(
+          '🎯 AI SDK Extension: Creating final reasoning output with text length:',
+          reasoningText.length,
+        );
+        console.log(
+          '📄 AI SDK Extension: Final reasoning text preview:',
+          reasoningText.substring(0, 200) +
+            (reasoningText.length > 200 ? '...' : ''),
+        );
         outputs.push({
           type: 'reasoning',
           content: [],
           rawContent: [{ type: 'reasoning_text', text: reasoningText }],
         });
+        console.log(
+          '✅ AI SDK Extension: Added reasoning output to final results',
+        );
+      } else {
+        console.log('❌ AI SDK Extension: No reasoning text accumulated');
       }
       if (textOutput) {
         outputs.push({
