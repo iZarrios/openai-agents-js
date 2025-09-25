@@ -715,7 +715,8 @@ export class AiSdkModel implements Model {
       const functionCalls: Record<string, protocol.FunctionCallItem> = {};
       let textOutput: protocol.OutputText | undefined;
       let reasoningText = '';
-      let providerMetadata: any = undefined;
+      let providerMetadata: any = {};
+      providerMetadata["__CUSTOM__"] = "__CUSTOM__";
       console.error(
         '🎬 AI SDK Extension: Initialized reasoning text accumulator',
       );
@@ -755,7 +756,7 @@ export class AiSdkModel implements Model {
             break;
           }
           case 'reasoning-delta': {
-            const delta = (part as any).delta || '';
+            const delta = (part as any).delta || 'EMPTY DELTA xdd';
             console.error(
               '📦 AI SDK Extension: Received reasoning-delta:',
               delta,
